@@ -1,4 +1,3 @@
-# prime numbers defined in RFC 3526
 primes = {
 	
 	# 1536-bit
@@ -44,7 +43,7 @@ import hashlib
 
 class DiffieHellman:
 	# Current minimum recommendation is 2048 bit.
-	def __init__(self, group=14):
+	def __init__(self, group=14, keylength=32):
 		if group in primes:
 			self.p = primes[group]["prime"]
 			self.g = primes[group]["generator"]
@@ -52,7 +51,7 @@ class DiffieHellman:
 			raise Exception("Invalid Group")
 
 		# generating random pvt key
-		self.__a = int(binascii.hexlify(os.urandom(32)), base=16)
+		self.__a = int(binascii.hexlify(os.urandom(keylength)), base=16)
 
 	def gen_public_key(self):
 		# calculate G^a mod p
@@ -68,6 +67,6 @@ class DiffieHellman:
 		# calculate the shared key G^ab mod p
 		if self.check_other_public_key(pub_key):
 			self.shared_key = pow(pub_key, self.__a, self.p)
-			return self.shared_key
+			return hashlib.sha256(str(self.shared_key).encode()).hexdigest()
 		else:
 			raise Exception("Bad public key")

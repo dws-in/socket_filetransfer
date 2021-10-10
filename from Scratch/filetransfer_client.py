@@ -23,6 +23,9 @@ class Client:
         self.filename = "filename.txt"
         self.filesize = os.path.getsize(self.filename)
 
+        """ Initial value """
+        self.iv = b'\00' * 16
+
         """ Generating client public key """
         self.client_key = DiffieHellman()
         self.client_pub_key=str(self.client_key.gen_public_key())
@@ -52,7 +55,7 @@ class Client:
 
         """ Generating client private key """
         self.client_pvt_key=self.client_key.gen_shared_key(server_pub_key)
-
+        print(self.client_pvt_key)
         """ Sending client public key """
         self.client.send(self.client_pub_key.encode(self.format))
 
