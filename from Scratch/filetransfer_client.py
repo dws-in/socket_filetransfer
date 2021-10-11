@@ -55,7 +55,7 @@ class Client:
 
         """ Generating client private key """
         self.client_pvt_key=self.client_key.gen_shared_key(server_pub_key)
-        print(self.client_pvt_key)
+        
         """ Sending client public key """
         self.client.send(self.client_pub_key.encode(self.format))
 

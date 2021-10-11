@@ -16,12 +16,11 @@ class Server:
         
         """ Initial value """
         self.iv = b'\00' * 16
-        
+
         """ Generating server public key """
         self.server_key=DiffieHellman()
         self.server_pub_key=str(self.server_key.gen_public_key())
         self.server_pvt_key=None
-        print(self.server_pub_key)
 
     def start_server(self):
         """ Binding and listening """
@@ -58,6 +57,7 @@ class Server:
 
         """ Generating server private key """
         self.server_pvt_key=self.server_key.gen_shared_key(client_pub_key)
+
         """ Creating aes object with the server private key """
         self.aes=AESCipher(self.server_pvt_key)
 
@@ -95,6 +95,3 @@ s=Server()
 s.start_server()
 s.recv_file()
 s.stop_client()
-
-
-# yang kurang ngecek format key dari DH
