@@ -115,16 +115,19 @@ def unpad(plaintext):
     return message
 
 def split_blocks(message, block_size=16):
-        assert len(message) % block_size == 0
-        return [message[i:i+16] for i in range(0, len(message), block_size)]
+    assert len(message) % block_size == 0
+    return [message[i:i+16] for i in range(0, len(message), block_size)]
 
+import hashlib
 
 class AESCipher:
     rounds_by_key_size = {16: 10, 24: 12, 32: 14}
     def __init__(self, master_key):
-        assert len(master_key) in AESCipher.rounds_by_key_size
-        self.n_rounds = AESCipher.rounds_by_key_size[len(master_key)]
-        self._key_matrices = self._expand_key(master_key)
+        self.key = hashlib.sha256(master_key.encode()).digest()
+        print(len(self.key))
+        assert len(self.key) in AESCipher.rounds_by_key_size
+        self.n_rounds = AESCipher.rounds_by_key_size[len(self.key)]
+        self._key_matrices = self._expand_key(self.key)
 
     def encrypt_block(self, plaintext):
         assert len(plaintext) == 16
@@ -205,3 +208,4 @@ class AESCipher:
 
         return unpad(b''.join(blocks))
 
+#pad dan unpad error
