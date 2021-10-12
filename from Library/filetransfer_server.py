@@ -1,6 +1,6 @@
 import socket
-# from AES import AESCipher
-from AES_lib import AESCipher
+from key_exchange import DiffieHellman
+from AES_lib_wiithkey import AESCipher
 from tqdm import tqdm
 
 class Server:
@@ -13,11 +13,14 @@ class Server:
         self.header = 1024
         self.format = "utf-8"
         self.disconnect = 'exit'
+        
+        """ Initial value """
+        # self.iv = b'\00' * 16
 
-        """ AES 16 bits Key and IV """
-        self.key = b'\00' * 16
-        # self.iv = b'\01' * 16
-        self.aes=AESCipher(self.key)
+        """ Generating server public key """
+        self.server_key=DiffieHellman()
+        self.server_pub_key=str(self.server_key.gen_public_key())
+        self.server_pvt_key=None
 
     def start_server(self):
         """ Binding and listening """
@@ -29,14 +32,34 @@ class Server:
         self.client, self.client_addr = self.server.accept()
         self.client_name = self.client.recv(self.header).decode(self.format)
         print(f"[{self.client_addr}]-{self.client_name} - Connected")
-
+        
+        """ Exchange keys """
+        self.exchange_keys()
+        
         """ Receiving filename and filesize """
         msg = self.client.recv(self.header)
+
+        """ Decrypting filename and filesize """
         decrypted_msg = self.aes.decrypt(msg).decode(self.format)
         print(f"CLIENT: {decrypted_msg}")
+        
+        """ Extracting filename and filesize """
         item = decrypted_msg.split("_")
         self.filename = item[0]
         self.filesize = int(item[1])
+
+    def exchange_keys(self):
+        """ Sending server public key """
+        self.client.send((self.server_pub_key).encode(self.format))
+
+        """ Receiving client public key """
+        client_pub_key=int(self.client.recv(self.header).decode(self.format))
+
+        """ Generating server private key """
+        self.server_pvt_key=self.server_key.gen_shared_key(client_pub_key)
+
+        """ Creating aes object with the server private key """
+        self.aes=AESCipher(self.server_pvt_key)
 
     def recv_file(self):
         self.bar = tqdm(range(self.filesize), f"Receiving {self.filename}", unit="B", unit_scale=True, unit_divisor=self.header)
@@ -49,10 +72,12 @@ class Server:
 
                 """ Decrypting data """
                 decrypted_data = self.aes.decrypt(data).decode(self.format)
+                
+                """ Writing data to file"""
                 f.write(decrypted_data)
 
                 """ Sending feedback """
-                msg = "Data recieved by server"
+                msg = "Data recieved"
                 encrypted_msg = self.aes.encrypt(msg.encode(self.format))
                 self.client.send(encrypted_msg)
 
@@ -60,6 +85,7 @@ class Server:
                 self.bar.update(len(data))
         
     def stop_client(self):
+        """ Close connection """
         self.client.close()
         self.server.close()
         exit(0)

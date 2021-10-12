@@ -14,7 +14,7 @@ class Server:
         self.disconnect = 'exit'
 
         self.key = b'\00' * 16
-        self.iv = b'\01' * 16
+        # self.iv = b'\01' * 16
         self.aes=AESCipher(self.key)
 
     def start_server(self):
